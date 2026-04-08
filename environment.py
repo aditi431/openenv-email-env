@@ -1,77 +1,48 @@
-import random
+from pydantic import BaseModel
+from typing import Tuple, Dict
 from .dataset import EMAIL_DATA
-from .models import Observation
+
+
+class Observation(BaseModel):
+    email: str
+    index: int
+
 
 class EmailEnv:
 
     def __init__(self):
-
         self.index = 0
-        self.data = EMAIL_DATA
-        self.steps = 0
+        self.done = False
 
-    def reset(self):
-
+    def reset(self) -> Observation:
         self.index = 0
-        self.steps = 0
-
-        email = self.data[self.index]
-
+        self.done = False
         return Observation(
-            email_id=email["id"],
-            subject=email["subject"],
-            body=email["body"]
+            email=EMAIL_DATA[self.index]["text"],
+            index=self.index
         )
 
-    def state(self):
+    def step(self, action: str) -> Tuple[Observation, float, bool, Dict]:
 
-        return {
-            "index": self.index,
-            "steps": self.steps
-        }
+        correct_label = EMAIL_DATA[self.index]["label"]
 
-    def step(self, action):
-
-        email = self.data[self.index]
-
-        reward = 0
-        done = False
-        info = {}
-
-        if action["action_type"] == "spam_detection":
-
-            if action["value"] == email.get("label"):
-                reward = 1.0
-
-        if action["action_type"] == "priority":
-
-            if action["value"] == email.get("priority"):
-                reward = 1.0
-
-        if action["action_type"] == "routing":
-
-            if action["category"] == email.get("category"):
-                reward += 0.4
-
-            if action["department"] == email.get("department"):
-                reward += 0.6
+        reward = 1.0 if action == correct_label else -0.2
 
         self.index += 1
-        self.steps += 1
 
-        if self.index >= len(self.data):
-
-            done = True
-            observation = None
-
+        if self.index >= len(EMAIL_DATA):
+            self.done = True
+            obs = Observation(email="", index=self.index)
         else:
-
-            next_email = self.data[self.index]
-
-            observation = Observation(
-                email_id=next_email["id"],
-                subject=next_email["subject"],
-                body=next_email["body"]
+            obs = Observation(
+                email=EMAIL_DATA[self.index]["text"],
+                index=self.index
             )
 
-        return observation, reward, done, info
+        return obs, reward, self.done, {}
+
+    def state(self):
+        return {
+            "index": self.index,
+            "done": self.done
+        }
