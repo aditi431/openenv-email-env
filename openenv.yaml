@@ -1,23 +1,12 @@
 name: openenv-email-env
-description: Email triage environment for OpenEnv. The agent reads emails and decides actions such as categorize, prioritize, or respond.
-version: 0.1.0
-
 entry_point: env.environment:EmailEnv
 
 tasks:
   - id: email_easy
-    description: Categorize simple emails correctly.
     difficulty: easy
 
   - id: email_medium
-    description: Prioritize emails and choose appropriate actions.
     difficulty: medium
 
   - id: email_hard
-    description: Handle complex customer emails and respond appropriately.
     difficulty: hard
-
-tags:
-  - openenv
-  - email
-  - customer-support
