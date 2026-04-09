@@ -1,5 +1,12 @@
+from pydantic import BaseModel
+from typing import Tuple, Dict
 from .dataset import EMAIL_DATA
-from .models import Observation
+
+
+class Observation(BaseModel):
+    email: str
+    index: int
+
 
 class EmailEnv:
 
@@ -7,7 +14,7 @@ class EmailEnv:
         self.index = 0
         self.done = False
 
-    def reset(self):
+    def reset(self) -> Observation:
         self.index = 0
         self.done = False
         return Observation(
@@ -15,23 +22,27 @@ class EmailEnv:
             index=self.index
         )
 
-    def step(self, action):
-        correct = EMAIL_DATA[self.index]["label"]
+    def step(self, action: str) -> Tuple[Observation, float, bool, Dict]:
 
-        reward = 1.0 if action == correct else -0.2
+        correct_label = EMAIL_DATA[self.index]["label"]
+
+        reward = 1.0 if action == correct_label else -0.2
 
         self.index += 1
 
         if self.index >= len(EMAIL_DATA):
             self.done = True
-            return None, reward, True, {}
+            obs = Observation(email="", index=self.index)
+        else:
+            obs = Observation(
+                email=EMAIL_DATA[self.index]["text"],
+                index=self.index
+            )
 
-        obs = Observation(
-            email=EMAIL_DATA[self.index]["text"],
-            index=self.index
-        )
-
-        return obs, reward, False, {}
+        return obs, reward, self.done, {}
 
     def state(self):
-        return {"index": self.index}
+        return {
+            "index": self.index,
+            "done": self.done
+        }
